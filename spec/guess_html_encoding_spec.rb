@@ -3,15 +3,21 @@ require 'spec_helper'
 
 describe "GuessHtmlEncoding" do
   describe "#guess" do
-    it "prefers headers" do
+    it "can use headers" do
       guess = GuessHtmlEncoding.guess("<html><body><div>hi!</div></body></html>",
-                                      "Hello: world\nContent-Type: text/html; charset=utf-8\nFoo: bar")
-      guess.should == "UTF-8"
+                                      "Hello: world\nContent-Type: text/html; charset=LATIN1\nFoo: bar")
+      guess.should == "ISO-8859-1"
+    end
+
+    it "accepts headers as a hash as well" do
+      guess = GuessHtmlEncoding.guess("<html><body><div>hi!</div></body></html>",
+          {"Hello" => "world", "Content-Type" => "text/html; charset=LATIN1", "Foo" => "bar"})
+      guess.should == "ISO-8859-1"
     end
 
     it "accepts meta tags" do
-      guess = GuessHtmlEncoding.guess('<html><head><meta http-equiv="content-type" content="text/html; charset=utf-8"></head><body><div>hi!</div></body></html>')
-      guess.should == "UTF-8"
+      guess = GuessHtmlEncoding.guess('<html><head><meta http-equiv="content-type" content="text/html; charset=LATIN1"></head><body><div>hi!</div></body></html>')
+      guess.should == "ISO-8859-1"
     end
 
     it "works okay when there is a semi-colon after the encoding with headers" do
@@ -44,13 +50,26 @@ describe "GuessHtmlEncoding" do
   end
 
   describe "#encode" do
+    it "should work on correctly encoded pages" do
+      data = "<html><head><meta http-equiv='content-type' content='text/html; charset=utf8;'></head><body><div>hi!♥</div></body></html>"
+      data.force_encoding("ASCII-8BIT")
+      data.should be_valid_encoding # everything is valid in binary
+
+      GuessHtmlEncoding.guess(data).should == "UTF-8" # because the page says so!
+      data.force_encoding("UTF-8").should be_valid_encoding # because it really is utf-8
+
+      encoded = GuessHtmlEncoding.encode(data)
+      encoded.encoding.to_s.should == "UTF-8"
+      encoded.should be_valid_encoding
+    end
+
     it "should work on incorrectly encoded pages" do
       data = "<html><head><meta http-equiv='content-type' content='text/html; charset=utf8;'></head><body><div>hi!\xc2</div></body></html>"
       data.force_encoding("ASCII-8BIT")
       data.should be_valid_encoding # everything is valid in binary
 
       GuessHtmlEncoding.guess(data).should == "UTF-8" # because the page says so!
-      data.force_encoding("UTF-8").should_not be_valid_encoding # because of the bad byte sequence \xc2
+      data.force_encoding("UTF-8").should_not be_valid_encoding # because of the bad byte sequence \xc2 which is not valid UTF-8
 
       encoded = GuessHtmlEncoding.encode(data)
       encoded.encoding.to_s.should == "UTF-8"

@@ -1,15 +1,20 @@
 require "guess_html_encoding/version"
 
+# A small and simple library for guessing the encoding of HTML in Ruby 1.9.
 module GuessHtmlEncoding
+  # Guess the encoding of an HTML string, using HTTP headers if provided.  HTTP headers can be a string or a hash.
   def self.guess(html, headers = nil)
     html = html.dup.force_encoding("ASCII-8BIT")
-    headers = headers.dup.force_encoding("ASCII-8BIT") if headers
-
     out = nil
 
-    (headers || "").split("\n").map {|i| i.split(":")}.each do |k,v|
-      if k =~ /Content-Type/i && v =~ /charset=([\w\d-]+);?/i
-        out = $1.upcase
+    if headers
+      headers = headers.map {|k, v| "#{k}: #{v}" }.join("\n") if headers.is_a?(Hash)
+      headers = headers.dup.force_encoding("ASCII-8BIT")
+      headers.split("\n").map {|i| i.split(":")}.each do |k,v|
+        if k =~ /Content-Type/i && v =~ /charset=([\w\d-]+);?/i
+          out = $1.upcase
+          break
+        end
       end
     end
 
@@ -19,6 +24,7 @@ module GuessHtmlEncoding
       end
     end
 
+    # Translate encodings with other names.
     if out
       out = "UTF-8" if ["DEFAULT", "UTF8", "UNICODE"].include?(out.upcase)
       out = "CP1251" if out.upcase == "CP-1251"
@@ -29,6 +35,7 @@ module GuessHtmlEncoding
     out
   end
 
+  # Force an HTML string into a guessed encoding.
   def self.encode(html, headers = nil)
     encoding = guess(html, (headers || '').gsub(/[\r\n]+/, "\n"))
     html.force_encoding(encoding ? encoding : "UTF-8")
