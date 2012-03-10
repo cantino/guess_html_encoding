@@ -18,7 +18,7 @@ module GuessHtmlEncoding
       end
     end
 
-    if out.nil? || out.empty? || !Encoding.name_list.include?(out)
+    if out.nil? || out.empty? || !encoding_loaded?(out)
       if html =~ /<meta[^>]*HTTP-EQUIV=["']Content-Type["'][^>]*content=["']([^'"]*)["']/i && $1 =~ /charset=([\w\d-]+);?/i
         out = $1.upcase
       end
@@ -38,11 +38,16 @@ module GuessHtmlEncoding
   # Force an HTML string into a guessed encoding.
   def self.encode(html, headers = nil)
     encoding = guess(html, (headers || '').gsub(/[\r\n]+/, "\n"))
-    html.force_encoding(encoding ? encoding : "UTF-8")
+    html.force_encoding(encoding_loaded?(encoding) ? encoding : "UTF-8")
     if html.valid_encoding?
       html
     else
       html.force_encoding('ASCII-8BIT').encode('UTF-8', :undef => :replace, :invalid => :replace)
     end
+  end
+
+  # Is this encoding loaded?
+  def self.encoding_loaded?(encoding)
+    Encoding.name_list.include? encoding
   end
 end
