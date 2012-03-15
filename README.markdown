@@ -1,52 +1,37 @@
-GuessHtmlEncoding is a simple library to guess the HTML encodings in Ruby 1.9
+# GuessHtmlEncoding
 
-describe "GuessHtmlEncoding" do
-  describe "#guess" do
-    it "can use headers" do
-      guess = GuessHtmlEncoding.guess("<html><body><div>hi!</div></body></html>",
-                                      "Hello: world\nContent-Type: text/html; charset=LATIN1\nFoo: bar")
-      guess.should == "ISO-8859-1"
-    end
+GuessHtmlEncoding is a simple library to guess the HTML encodings in Ruby 1.9.  See the specs for a complete rundown.
 
-    it "accepts headers as a hash as well" do
-      guess = GuessHtmlEncoding.guess("<html><body><div>hi!</div></body></html>",
-          {"Hello" => "world", "Content-Type" => "text/html; charset=LATIN1", "Foo" => "bar"})
-      guess.should == "ISO-8859-1"
-    end
+# Usage
 
-    it "accepts meta tags" do
-      guess = GuessHtmlEncoding.guess('<html><head><meta http-equiv="content-type" content="text/html; charset=LATIN1"></head><body><div>hi!</div></body></html>')
-      guess.should == "ISO-8859-1"
-    end
+It guesses from the http content type:
 
-    ...
-  end
+    guess = GuessHtmlEncoding.guess(<<-HTML)
+      <html>
+        <head>
+          <meta http-equiv="content-type" content="text/html; charset=LATIN1">
+        </head>
+        <body>
+          <div>hi!</div>
+        </body>
+      </html>
+    HTML
+    guess.should == "ISO-8859-1"
 
-  describe "#encode" do
-    it "should work on correctly encoded pages" do
-      data = "<html><head><meta http-equiv='content-type' content='text/html; charset=utf8;'></head><body><div>hi!♥</div></body></html>"
-      data.force_encoding("ASCII-8BIT")
-      data.should be_valid_encoding # everything is valid in binary
+You can also give it HTTP headers to guess from, both as a string or as a hash:
 
-      GuessHtmlEncoding.guess(data).should == "UTF-8" # because the page says so!
-      data.force_encoding("UTF-8").should be_valid_encoding # because it really is utf-8
+    guess = GuessHtmlEncoding.guess("<html><body><div>hi!</div></body></html>",
+                                    "Hello: world\nContent-Type: text/html; charset=LATIN1\nFoo: bar")
+    guess.should == "ISO-8859-1"
 
-      encoded = GuessHtmlEncoding.encode(data)
-      encoded.encoding.to_s.should == "UTF-8"
-      encoded.should be_valid_encoding
-    end
+    guess = GuessHtmlEncoding.guess("<html><body><div>hi!</div></body></html>",
+                                    {"Hello" => "world", "Content-Type" => "text/html; charset=LATIN1", "Foo" => "bar"})
+    guess.should == "ISO-8859-1"
 
-    it "should work on incorrectly encoded pages" do
-      data = "<html><head><meta http-equiv='content-type' content='text/html; charset=utf8;'></head><body><div>hi!\xc2</div></body></html>"
-      data.force_encoding("ASCII-8BIT")
-      data.should be_valid_encoding # everything is valid in binary
+You can also directly encode the text based on the guess:
 
-      GuessHtmlEncoding.guess(data).should == "UTF-8" # because the page says so!
-      data.force_encoding("UTF-8").should_not be_valid_encoding # because of the bad byte sequence \xc2 which is not valid UTF-8
+    data = "<html><head><meta http-equiv='content-type' content='text/html; charset=utf8;'></head><body><div>hi!♥</div></body></html>"
+    encoded = GuessHtmlEncoding.encode(data)
+    encoded.encoding.to_s.should == "UTF-8"
 
-      encoded = GuessHtmlEncoding.encode(data)
-      encoded.encoding.to_s.should == "UTF-8"
-      encoded.should be_valid_encoding
-    end
-  end
-end
+# Pull requests welcome!
