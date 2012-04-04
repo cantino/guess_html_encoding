@@ -76,7 +76,7 @@ describe "GuessHtmlEncoding" do
       encoded.should be_valid_encoding
     end
 
-    it "should work on pages encoded with an unloaded encoding" do
+    it "should work on pages encoded with an unknown encoding by forcing them to utf8" do
       data = "<html><head><meta http-equiv='content-type' content='text/html; charset=x-mac-roman;'></head><body><div>hi!</div></body></html>"
       data.force_encoding("ASCII-8BIT")
       data.should be_valid_encoding # everything is valid in binary
@@ -86,6 +86,8 @@ describe "GuessHtmlEncoding" do
       encoded = GuessHtmlEncoding.encode(data)
       encoded.encoding.to_s.should == "UTF-8"
       encoded.should be_valid_encoding
+
+      data.encoding.to_s.should == "ASCII-8BIT"
     end
   end
 
@@ -95,6 +97,7 @@ describe "GuessHtmlEncoding" do
         GuessHtmlEncoding.encoding_loaded?(name).should be_true
       end
     end
+
     it 'returns false for irregular or unloaded encoding' do
       GuessHtmlEncoding.encoding_loaded?('_WHY').should be_false
     end

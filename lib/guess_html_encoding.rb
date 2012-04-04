@@ -26,10 +26,10 @@ module GuessHtmlEncoding
 
     # Translate encodings with other names.
     if out
-      out = "UTF-8" if ["DEFAULT", "UTF8", "UNICODE"].include?(out.upcase)
-      out = "CP1251" if out.upcase == "CP-1251"
-      out = "ISO-8859-1" if ["LATIN1", "LATIN-1"].include?(out.upcase)
-      out = "Windows-1250" if ["WIN-1251", "WIN1251"].include?(out.upcase)
+      out = "UTF-8" if %w[DEFAULT UTF8 UNICODE].include?(out)
+      out = "CP1251" if out == "CP-1251"
+      out = "ISO-8859-1" if %w[LATIN1 LATIN-1].include?(out)
+      out = "Windows-1250" if %w[WIN-1251 WIN1251].include?(out)
     end
 
     out
@@ -37,12 +37,13 @@ module GuessHtmlEncoding
 
   # Force an HTML string into a guessed encoding.
   def self.encode(html, headers = nil)
-    encoding = guess(html, (headers || '').gsub(/[\r\n]+/, "\n"))
-    html.force_encoding(encoding_loaded?(encoding) ? encoding : "UTF-8")
-    if html.valid_encoding?
-      html
+    html_copy = html.dup
+    encoding = guess(html_copy, (headers || '').gsub(/[\r\n]+/, "\n"))
+    html_copy.force_encoding(encoding_loaded?(encoding) ? encoding : "UTF-8")
+    if html_copy.valid_encoding?
+      html_copy
     else
-      html.force_encoding('ASCII-8BIT').encode('UTF-8', :undef => :replace, :invalid => :replace)
+      html_copy.force_encoding('ASCII-8BIT').encode('UTF-8', :undef => :replace, :invalid => :replace)
     end
   end
 
