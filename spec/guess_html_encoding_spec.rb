@@ -47,6 +47,9 @@ describe "GuessHtmlEncoding" do
       guess.should == "UTF-8"
     end
 
+    it "should not raise an exception if data is nil" do
+      GuessHtmlEncoding.guess(nil).should_not raise_error(TypeError)
+    end
   end
 
   describe "#encode" do
@@ -88,6 +91,10 @@ describe "GuessHtmlEncoding" do
       encoded.should be_valid_encoding
 
       data.encoding.to_s.should == "ASCII-8BIT"
+    end
+
+    it "should not raise an exception if data is nil" do
+      GuessHtmlEncoding.encode(nil).should_not raise_error(TypeError)
     end
   end
 

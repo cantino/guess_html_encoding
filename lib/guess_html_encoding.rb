@@ -4,7 +4,7 @@ require "guess_html_encoding/version"
 module GuessHtmlEncoding
   # Guess the encoding of an HTML string, using HTTP headers if provided.  HTTP headers can be a string or a hash.
   def self.guess(html, headers = nil)
-    html = html.dup.force_encoding("ASCII-8BIT")
+    html = html.to_s.dup.force_encoding("ASCII-8BIT")
     out = nil
 
     if headers
@@ -37,7 +37,7 @@ module GuessHtmlEncoding
 
   # Force an HTML string into a guessed encoding.
   def self.encode(html, headers = nil)
-    html_copy = html.dup
+    html_copy = html.to_s.dup
     encoding = guess(html_copy, (headers || '').gsub(/[\r\n]+/, "\n"))
     html_copy.force_encoding(encoding_loaded?(encoding) ? encoding : "UTF-8")
     if html_copy.valid_encoding?
