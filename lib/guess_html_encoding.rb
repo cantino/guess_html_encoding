@@ -29,7 +29,7 @@ module GuessHtmlEncoding
       out = "UTF-8" if %w[DEFAULT UTF8 UNICODE].include?(out)
       out = "CP1251" if out == "CP-1251"
       out = "ISO-8859-1" if %w[LATIN1 LATIN-1].include?(out)
-      out = "Windows-1250" if %w[WIN-1251 WIN1251].include?(out)
+      out = "WINDOWS-1250" if %w[WIN-1251 WIN1251].include?(out)
     end
 
     out
@@ -49,6 +49,6 @@ module GuessHtmlEncoding
 
   # Is this encoding loaded?
   def self.encoding_loaded?(encoding)
-    Encoding.name_list.include? encoding
+    !!Encoding.find(encoding) rescue nil
   end
 end

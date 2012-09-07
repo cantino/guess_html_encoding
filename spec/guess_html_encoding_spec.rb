@@ -47,6 +47,11 @@ describe "GuessHtmlEncoding" do
       guess.should == "UTF-8"
     end
 
+    it "translates WIN1251 to WINDOWS-1250" do
+      guess = GuessHtmlEncoding.guess('<html><head><meta http-equiv="content-type" content="text/html; charset=WIN1251;"></head><body><div>hi!</div></body></html>')
+      guess.should == "WINDOWS-1250"
+    end
+
     it "should not raise an exception if data is nil" do
       GuessHtmlEncoding.guess(nil).should_not raise_error(TypeError)
     end
@@ -100,8 +105,28 @@ describe "GuessHtmlEncoding" do
 
   describe "#encoding_loaded?" do
     it 'returns true for all loaded encodings' do
-      Encoding.name_list.each do |name|
+      (Encoding.name_list - ["internal"]).each do |name|
         GuessHtmlEncoding.encoding_loaded?(name).should be_true
+        lambda { Encoding.find(name) }.should_not raise_error
+      end
+    end
+
+    it 'returns true for uppercase encodings' do
+      GuessHtmlEncoding.encoding_loaded?("WINDOWS-1250").should be_true
+      lambda { Encoding.find("WINDOWS-1250") }.should_not raise_error
+    end
+
+    it 'returns true for lowercase encodings' do
+      GuessHtmlEncoding.encoding_loaded?("windows-1250").should be_true
+      lambda { Encoding.find("windows-1250") }.should_not raise_error
+    end
+
+    it 'returns true for encoding aliases' do
+      Encoding.aliases.keys.each do |key|
+        GuessHtmlEncoding.encoding_loaded?(key).should be_true
+        GuessHtmlEncoding.encoding_loaded?(key.upcase).should be_true
+        lambda { Encoding.find(key) }.should_not raise_error
+        lambda { Encoding.find(key.upcase) }.should_not raise_error
       end
     end
 
