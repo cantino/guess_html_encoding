@@ -52,6 +52,11 @@ describe "GuessHtmlEncoding" do
       guess.should == "WINDOWS-1250"
     end
 
+    it "translates GB2312 to GB18030" do
+      guess = GuessHtmlEncoding.guess('<html><head><meta http-equiv="content-type" content="text/html; charset=GB2312;"></head><body><div>hi!</div></body></html>')
+      guess.should == "GB18030"
+    end
+    
     it "should not raise an exception if data is nil" do
       GuessHtmlEncoding.guess(nil).should_not raise_error(TypeError)
     end
