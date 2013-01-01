@@ -106,6 +106,14 @@ describe "GuessHtmlEncoding" do
     it "should not raise an exception if data is nil" do
       GuessHtmlEncoding.encode(nil).should_not raise_error(TypeError)
     end
+
+
+    it "should work on GB18030 (and translate GB2312 into GB18030)" do
+      data = File.read(File.join(File.dirname(__FILE__), "fixtures/gb18030.html"), :encoding => "binary")
+      GuessHtmlEncoding.encoding_loaded?("GB18030").should be_true
+      GuessHtmlEncoding.guess(data).should == "GB18030"
+      GuessHtmlEncoding.encode(data).encoding.to_s.should == "GB18030"
+    end
   end
 
   describe "#encoding_loaded?" do
