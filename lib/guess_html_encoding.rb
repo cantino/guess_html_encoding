@@ -19,9 +19,12 @@ module GuessHtmlEncoding
     end
 
     if out.nil? || out.empty? || !encoding_loaded?(out)
-      if html =~ /<meta[^>]*HTTP-EQUIV=["']Content-Type["'][^>]*content=["']([^'"]*)["']/i && $1 =~ /charset=([\w\d-]+);?/i
-        out = $1.upcase
+      if html =~ /<meta[^>]*HTTP-EQUIV=["']?Content-Type["']?[^>]*content=["']([^'"]*)["']/i && $1 =~ /charset=([\w\d-]+);?/i
+        out = $1
+      elsif html =~ /<meta\s+charset=["']([\w\d-]+)?/i
+        out = $1
       end
+      out.upcase! unless out.nil?
     end
 
     # Translate encodings with other names.
