@@ -146,5 +146,17 @@ describe "GuessHtmlEncoding" do
     it 'returns false for irregular or unloaded encoding' do
       GuessHtmlEncoding.encoding_loaded?('_WHY').should be_false
     end
+
+    it "accepts a simple meta tag" do
+      # Like http://www.taobao.com
+      guess = GuessHtmlEncoding.guess('<html><head><meta charset="gbk" /></head><body><div>hi!</div></body></html>')
+      guess.should == "GBK"
+    end
+
+    it "works as well when there is no double quotation marks with http-equiv in meta-tags" do
+      # Like http://www.frozentux.net/iptables-tutorial/cn/iptables-tutorial-cn-1.1.19.html
+      guess = GuessHtmlEncoding.guess('<html><head><META http-equiv=Content-Type content="text/html; charset=utf-8"></head><body><div>hi!</div></body></html>')
+      guess.should == "UTF-8"
+    end
   end
 end
