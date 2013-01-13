@@ -7,9 +7,9 @@ Gem::Specification.new do |s|
   s.version     = GuessHtmlEncoding::VERSION
   s.authors     = ["Andrew Cantino (Iteration Labs, LLC)"]
   s.email       = ["andrew@iterationlabs.com"]
-  s.homepage    = "http://github.com/iterationlabs/guess_html_encoding"
-  s.summary     = %q{This gem helps guess the encoding of an HTML page.}
-  s.description = %q{This gem helps guess the encoding of an HTML page.}
+  s.homepage    = "http://github.com/cantino/guess_html_encoding"
+  s.summary     = %q{A small gem that attempts to guess and then force encoding of HTML documents for Ruby 1.9}
+  s.description = %q{}
 
   s.rubyforge_project = "guess_html_encoding"
 
