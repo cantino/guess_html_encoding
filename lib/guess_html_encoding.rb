@@ -42,7 +42,7 @@ module GuessHtmlEncoding
   # Force an HTML string into a guessed encoding.
   def self.encode(html, headers = nil)
     html_copy = html.to_s.dup
-    encoding = guess(html_copy, (headers || '').gsub(/[\r\n]+/, "\n"))
+    encoding = guess(html_copy, headers)
     html_copy.force_encoding(encoding_loaded?(encoding) ? encoding : "UTF-8")
     if html_copy.valid_encoding?
       html_copy
