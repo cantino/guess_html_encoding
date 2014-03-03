@@ -103,8 +103,19 @@ describe "GuessHtmlEncoding" do
       data.encoding.to_s.should == "ASCII-8BIT"
     end
 
+    it "accepts headers as a hash as well" do
+      guess = GuessHtmlEncoding.guess("<html><body><div>hi!</div></body></html>",
+          {"Hello" => "world", "Content-Type" => "text/html; charset=LATIN1", "Foo" => "bar"})
+      guess.should == "ISO-8859-1"
+    end
+
     it "should not raise an exception if data is nil" do
       GuessHtmlEncoding.encode(nil).should_not raise_error(TypeError)
+    end
+
+    it 'should not raise an exception if headers is an empty Hash' do
+      data = "<html><body><div>hi!</div></body></html>"
+      lambda { GuessHtmlEncoding.encode(data, {}) }.should_not raise_error
     end
 
 
