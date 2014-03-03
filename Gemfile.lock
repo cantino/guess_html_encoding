@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    guess_html_encoding (0.0.8)
+    guess_html_encoding (0.0.10)
 
 GEM
   remote: http://rubygems.org/
