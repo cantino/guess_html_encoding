@@ -113,6 +113,11 @@ describe "GuessHtmlEncoding" do
       expect(GuessHtmlEncoding.guess(data)).to eq("GB18030")
       expect(GuessHtmlEncoding.encode(data).encoding.to_s).to eq("GB18030")
     end
+    
+    it "should work with headers as a hash" do
+      data = File.read(File.join(File.dirname(__FILE__), "fixtures/gb18030.html"), :encoding => "binary")
+      expect(lambda { GuessHtmlEncoding.encode(data, {}) }).not_to raise_error
+    end
   end
 
   describe "#encoding_loaded?" do

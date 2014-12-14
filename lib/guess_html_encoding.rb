@@ -10,7 +10,7 @@ module GuessHtmlEncoding
     if headers
       headers = headers.map {|k, v| "#{k}: #{v}" }.join("\n") if headers.is_a?(Hash)
       headers = headers.dup.force_encoding("ASCII-8BIT")
-      headers.split("\n").map {|i| i.split(":")}.each do |k,v|
+      headers.gsub(/[\r\n]+/, "\n").split("\n").map {|i| i.split(":")}.each do |k,v|
         if k =~ /Content-Type/i && v =~ /charset=([\w\d-]+);?/i
           out = $1.upcase
           break
@@ -42,7 +42,7 @@ module GuessHtmlEncoding
   # Force an HTML string into a guessed encoding.
   def self.encode(html, headers = nil)
     html_copy = html.to_s.dup
-    encoding = guess(html_copy, (headers || '').gsub(/[\r\n]+/, "\n"))
+    encoding = guess(html_copy, headers)
     html_copy.force_encoding(encoding_loaded?(encoding) ? encoding : "UTF-8")
     if html_copy.valid_encoding?
       html_copy
