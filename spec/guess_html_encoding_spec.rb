@@ -58,7 +58,7 @@ describe "GuessHtmlEncoding" do
     end
     
     it "should not raise an exception if data is nil" do
-      GuessHtmlEncoding.guess(nil).should_not raise_error(TypeError)
+      lambda { GuessHtmlEncoding.guess(nil) }.should_not raise_error
     end
   end
 
@@ -104,13 +104,12 @@ describe "GuessHtmlEncoding" do
     end
 
     it "should not raise an exception if data is nil" do
-      GuessHtmlEncoding.encode(nil).should_not raise_error(TypeError)
+      lambda { GuessHtmlEncoding.encode(nil) }.should_not raise_error
     end
-
 
     it "should work on GB18030 (and translate GB2312 into GB18030)" do
       data = File.read(File.join(File.dirname(__FILE__), "fixtures/gb18030.html"), :encoding => "binary")
-      GuessHtmlEncoding.encoding_loaded?("GB18030").should be_true
+      GuessHtmlEncoding.encoding_loaded?("GB18030").should be_truthy
       GuessHtmlEncoding.guess(data).should == "GB18030"
       GuessHtmlEncoding.encode(data).encoding.to_s.should == "GB18030"
     end
@@ -119,32 +118,32 @@ describe "GuessHtmlEncoding" do
   describe "#encoding_loaded?" do
     it 'returns true for all loaded encodings' do
       (Encoding.name_list - ["internal"]).each do |name|
-        GuessHtmlEncoding.encoding_loaded?(name).should be_true
+        GuessHtmlEncoding.encoding_loaded?(name).should be_truthy
         lambda { Encoding.find(name) }.should_not raise_error
       end
     end
 
     it 'returns true for uppercase encodings' do
-      GuessHtmlEncoding.encoding_loaded?("WINDOWS-1250").should be_true
+      GuessHtmlEncoding.encoding_loaded?("WINDOWS-1250").should be_truthy
       lambda { Encoding.find("WINDOWS-1250") }.should_not raise_error
     end
 
     it 'returns true for lowercase encodings' do
-      GuessHtmlEncoding.encoding_loaded?("windows-1250").should be_true
+      GuessHtmlEncoding.encoding_loaded?("windows-1250").should be_truthy
       lambda { Encoding.find("windows-1250") }.should_not raise_error
     end
 
     it 'returns true for encoding aliases' do
       Encoding.aliases.keys.each do |key|
-        GuessHtmlEncoding.encoding_loaded?(key).should be_true
-        GuessHtmlEncoding.encoding_loaded?(key.upcase).should be_true
+        GuessHtmlEncoding.encoding_loaded?(key).should be_truthy
+        GuessHtmlEncoding.encoding_loaded?(key.upcase).should be_truthy
         lambda { Encoding.find(key) }.should_not raise_error
         lambda { Encoding.find(key.upcase) }.should_not raise_error
       end
     end
 
     it 'returns false for irregular or unloaded encoding' do
-      GuessHtmlEncoding.encoding_loaded?('_WHY').should be_false
+      GuessHtmlEncoding.encoding_loaded?('_WHY').should be_falsy
     end
 
     it "accepts a simple meta tag" do
