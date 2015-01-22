@@ -57,6 +57,11 @@ describe "GuessHtmlEncoding" do
       expect(guess).to eq("GB18030")
     end
     
+    it "will use the first qualifying meta tag" do
+      guess = GuessHtmlEncoding.guess('<html<head><meta charset="iso-8859-1" /><meta http-equiv="Content-Type" content="text/html;charset=UTF-8" /></body></html>')
+      expect(guess).to eq("ISO-8859-1")
+    end
+
     it "should not raise an exception if data is nil" do
       expect { GuessHtmlEncoding.guess(nil) }.not_to raise_error
     end
