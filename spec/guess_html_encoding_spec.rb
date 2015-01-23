@@ -16,7 +16,7 @@ describe "GuessHtmlEncoding" do
     end
 
     it "accepts meta tags" do
-      guess = GuessHtmlEncoding.guess('<html><head><meta http-equiv="content-type" content="text/html; charset=LATIN1"></head><body><div>hi!</div></body></html>')
+      guess = GuessHtmlEncoding.guess('<html><head><meta test="blah" http-equiv="content-type" content="text/html; charset=LATIN1"></head><body><div>hi!</div></body></html>')
       expect(guess).to eq("ISO-8859-1")
     end
 
