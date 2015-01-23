@@ -19,11 +19,20 @@ module GuessHtmlEncoding
     end
 
     if out.nil? || out.empty? || !encoding_loaded?(out)
-      if html =~ /<meta[^>]*HTTP-EQUIV=["']?Content-Type["']?[^>]*content=["']([^'"]*)["']/i && $1 =~ /charset=([\w\d-]+);?/i
-        out = $1
-      elsif html =~ /<meta\s+charset=["']([\w\d-]+)?/i
-        out = $1
+
+      meta_tags_regex = /
+      (?:
+        <meta[^>]*HTTP-EQUIV=["']?Content-Type["']?[^>]*content=["'][^'"]*charset\s*=\s*([^"'\;\s]+)  # http-equiv
+        |                                                                                              # or
+        <meta\s+charset=["']([\w\d-]+)?                                                                # charset
+      )/ix
+
+      meta_match = html.match(meta_tags_regex)
+
+      if meta_match
+        out = meta_match[1] || meta_match[2]
       end
+
       out.upcase! unless out.nil?
     end
 
