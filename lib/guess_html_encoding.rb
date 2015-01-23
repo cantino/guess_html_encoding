@@ -22,7 +22,7 @@ module GuessHtmlEncoding
 
       meta_tags_regex = /
       (?:
-        <meta[^>]*HTTP-EQUIV=["']?Content-Type["']?[^>]*content=["'][^'"]*charset\s*=\s*([\w\d-]+)[;"']  # http-equiv
+        <meta[^>]*HTTP-EQUIV=["']?Content-Type["']?[^>]*content=["'][^'"]*charset\s*=\s*([^"'\;\s]+)  # http-equiv
         |                                                                                              # or
         <meta\s+charset=["']([\w\d-]+)?                                                                # charset
       )/ix

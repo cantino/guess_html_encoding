@@ -15,8 +15,13 @@ describe "GuessHtmlEncoding" do
       expect(guess).to eq("ISO-8859-1")
     end
 
-    it "accepts meta tags" do
-      guess = GuessHtmlEncoding.guess('<html><head><meta test="blah" http-equiv="content-type" content="text/html; charset=LATIN1"></head><body><div>hi!</div></body></html>')
+    it "accepts meta tags ending with ;" do
+      guess = GuessHtmlEncoding.guess('<html><head><meta test="blah" http-equiv="content-type" content="text/html; charset=LATIN1; "></head><body><div>hi!</div></body></html>')
+      expect(guess).to eq("ISO-8859-1")
+    end
+
+    it "accepts meta tags ending with space" do
+      guess = GuessHtmlEncoding.guess('<html><head><meta test="blah" http-equiv="content-type" content="text/html; charset=LATIN1 "></head><body><div>hi!</div></body></html>')
       expect(guess).to eq("ISO-8859-1")
     end
 
