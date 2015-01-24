@@ -110,6 +110,9 @@ module GuessHtmlEncoding
     private
 
 
+    # Given a string which starts with the space or slash following a `<meta`, 
+    # look for a charset and returns it along with the position of the next
+    # character following the closing `>` character
     def charset_from_meta(string)
 
       position = 0
