@@ -138,9 +138,11 @@ module GuessHtmlEncoding
         
         else
 
+          # found a new attribute. Add it to the list
           attribute_list[attribute[:attribute_name]] = attribute[:attribute_value]
 
           if attribute[:attribute_name] == 'http-equiv'
+
             got_pragma = true
 
           elsif attribute[:attribute_name] == 'content'
