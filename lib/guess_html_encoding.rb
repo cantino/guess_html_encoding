@@ -19,11 +19,9 @@ module GuessHtmlEncoding
     end
 
     if out.nil? || out.empty? || !encoding_loaded?(out)
-      if html =~ /<meta[^>]*HTTP-EQUIV=["']?Content-Type["']?[^>]*content=["']([^'"]*)["']/i && $1 =~ /charset=([\w\d-]+);?/i
-        out = $1
-      elsif html =~ /<meta\s+charset=["']([\w\d-]+)?/i
-        out = $1
-      end
+
+      out = HTMLScanner.new(html).encoding || out
+
       out.upcase! unless out.nil?
     end
 
@@ -54,5 +52,249 @@ module GuessHtmlEncoding
   # Is this encoding loaded?
   def self.encoding_loaded?(encoding)
     !!Encoding.find(encoding) rescue nil
+  end
+
+  class HTMLScanner
+
+    def initialize(html)
+      @html = html
+    end
+
+    # Returns the encoding sniffed from the content of an HTML page, as determined using an 
+    # implemention of the algorithm to 'prescan a byte stream to determine its encoding', as
+    # specified by the HTML specification: 
+    # http://www.w3.org/html/wg/drafts/html/master/syntax.html#prescan-a-byte-stream-to-determine-its-encoding
+    def encoding
+
+      position = 0
+      charset = nil
+      
+      done = false
+
+      while position < @html.length && !done
+
+        if @html[position, 5] =~ /\<meta/i
+
+          position += 5
+          attribute_list = {}
+          got_pragma = false
+          need_pragma = nil
+          charset = nil
+
+          attribute = true
+
+          while !done
+
+            attribute, p = attribute(@html[position, @html.length])
+            
+            position += p.to_i
+
+            if attribute == nil
+              position
+              break
+
+            else 
+
+              break if attribute_list[attribute[:attribute_name]]
+
+              attribute_list[attribute[:attribute_name]] = attribute[:attribute_value]
+
+              if attribute[:attribute_name] == 'http-equiv'
+                got_pragma = true
+
+              elsif attribute[:attribute_name] == 'content'
+
+                content_charset = charset_from_meta_content(attribute[:attribute_value])
+
+                if content_charset && charset == nil
+                  charset = content_charset
+                  need_pragma = true
+                end
+
+              elsif attribute[:attribute_name] == 'charset'
+
+                charset = attribute[:attribute_value]
+                need_pragma = false
+
+              end
+
+              if need_pragma == nil || (need_pragma == true && got_pragma == false)
+                # Continue
+              else
+                # TODO: this is ugly. Need to figure out better way to break out of the top-level loop                            
+                done = true
+              end
+
+            end
+
+          end
+
+        else
+          position += 1
+        end
+
+      end
+
+      charset
+    end
+
+    private
+
+    # Given a string representing the 'content' attribute value of a meta tag
+    # with an `http-equiv` attribute, returns the charset specified within that
+    # value, or nil.
+    def charset_from_meta_content(string)
+
+      charset_match = string.match(/charset\s*\=\s*(.+)/i)
+
+      if charset_match
+
+        charset_value = charset_match[1]
+
+        charset_value[/\A\"(.*)\"/, 1] ||
+        charset_value[/\A\'(.*)\'/, 1] ||
+        charset_value[/(.*)[\s;]/, 1] ||
+        charset_value[/(.*)/, 1]
+      else
+        nil
+      end
+
+    end
+
+    # Given a string, returns the first attribute in the sting (as a hash), and
+    # the position of the next character in the string
+    def attribute(string)
+
+      attribute_name = ""
+      attribute_value = ""
+
+      length = string.length
+      position = 0
+
+      return [nil, nil] if length == 0 
+
+      while position < (length)
+
+        # If character matches 0x09 (ASCII TAB), 0x0A (ASCII LF), 0x0C (ASCII FF), 0x0D (ASCII CR), 0x20 (ASCII space), or 0x2F (ASCII /) then advance position
+        if string[position] =~ /[\u{09}\u{0A}\u{0C}\u{0D}\u{20}\u{2f}]/
+          
+          position += 1
+        
+        elsif string[position] == '>'
+
+          position += 1
+          attribute_name = nil
+          break
+
+        else
+
+          while position < length
+          
+            if string[position] == '=' && attribute_name != ''
+
+              attribute_value, p = attribute_value(string[position + 1, length])
+
+              position += p + 1
+
+              break
+
+            elsif string[position] =~ /[\>\/]/
+              break
+            
+            elsif string[position] =~ /[A-Z]/
+
+              attribute_name += string[position].downcase
+              position += 1
+
+            else
+              attribute_name += string[position]
+              position += 1
+            end
+
+          end
+
+          break
+
+        end
+
+      end
+
+      if attribute_name
+        [{attribute_name: attribute_name, attribute_value: attribute_value}, position]
+      else
+        [nil, position]
+      end
+
+    end
+
+    # Given a string, this returns the attribute value from the start of the string,
+    # and the position of the following character in the string
+    def attribute_value(string)
+
+      attribute_value = ''
+      position = 0
+
+      while position < (string.length)
+      
+        # x09 (ASCII TAB), 0x0A (ASCII LF), 0x0C (ASCII FF), 0x0D (ASCII CR), or 0x20 (ASCII space) then advance position to the next byte, then, repeat this step.
+        if string[position] =~ /[\u{09}\u{0A}\u{0C}\u{0D}\u{20}]/
+            
+          position += 1
+
+        elsif string[position] =~ /['"]/
+
+          attribute_value, position = quoted_value(string[position, string.length])
+          break
+
+        elsif string[position] == '>'
+          position += 1
+          break
+
+        else
+          attribute_value, position = unquoted_value(string[position, string.length])
+          break
+        end
+      end
+
+      [attribute_value, position]
+    end
+
+    # Downcases the A-Z characters only (eg not É -> é)
+    def downcase_A_to_Z_only(string)
+      string.gsub(/([A-Z])/) { |match| match.downcase }
+    end
+
+    # Given a string, at the start of which is an unquoted attribute value, returns
+    # that attribute value, and the position of the next character in the string
+    def unquoted_value(string)
+      downcased_value = downcase_A_to_Z_only(string[/\A[^\t\u{0A}\u{0C}\u{0D}\u{20}\>]*/])
+      [downcased_value, downcased_value.length]
+    end
+
+    # Given a string, at the start of which is quoted attribute value, returns
+    # that attribute value, and the position of the next character in the string
+    # (following the second matching quote mark)
+    def quoted_value(string)
+
+      attribute_value = ""
+      quote_type = string[0]
+      position = 1
+
+      while position < (string.length) 
+
+        if string[position] == quote_type
+          position += 1
+          break
+
+        else
+          attribute_value += downcase_A_to_Z_only(string[position])
+          position += 1
+        end
+
+      end
+
+      [attribute_value, position]
+    end
+
   end
 end
