@@ -52,12 +52,8 @@ describe "GuessHtmlEncoding" do
       expect(GuessHtmlEncoding.guess('<meta charset="UTF-9" charset="UTF-8">>')).to eql('UTF-9')
     end
 
-    it 'should use the content value if the http-equiv attribute appears first' do
-      expect(GuessHtmlEncoding.guess('<meta http-equiv="content-type" content="charset=UTF-8" charset="UTF-9">')).to eql('UTF-8')
-    end
-
-    it 'should use the charset value if it appears first' do
-      expect(GuessHtmlEncoding.guess('<meta charset="UTF-9" http-equiv="content-type" content="charset=UTF-8" >')).to eql('UTF-9')
+    it 'should use the charset value over the content value' do
+      expect(GuessHtmlEncoding.guess('<meta http-equiv="content-type" content="charset=UTF-8" charset="UTF-9">')).to eql('UTF-9')
     end
 
     it 'should use the charset value if it appears before http-equiv' do

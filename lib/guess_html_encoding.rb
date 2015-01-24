@@ -84,59 +84,11 @@ module GuessHtmlEncoding
         # Then look for the start of a meta tag
         elsif  @html[position, 6] =~ /\A\<meta[\s\/]/i
 
-          position += 5
-          attribute_list = {}
-          got_pragma = false
-          need_pragma = nil
-          charset = nil
+          charset, position_increment = charset_from_meta(@html[position + 5, length])
 
-          attribute = true
+          break if charset
 
-          while !done
-
-            attribute, p = attribute(@html[position, length])
-            
-            position += p.to_i
-
-            if attribute == nil
-              position
-              break
-
-            else 
-
-              break if attribute_list[attribute[:attribute_name]]
-
-              attribute_list[attribute[:attribute_name]] = attribute[:attribute_value]
-
-              if attribute[:attribute_name] == 'http-equiv'
-                got_pragma = true
-
-              elsif attribute[:attribute_name] == 'content'
-
-                content_charset = charset_from_meta_content(attribute[:attribute_value])
-
-                if content_charset && charset == nil
-                  charset = content_charset
-                  need_pragma = true
-                end
-
-              elsif attribute[:attribute_name] == 'charset'
-
-                charset = attribute[:attribute_value]
-                need_pragma = false
-
-              end
-
-              if need_pragma == nil || (need_pragma == true && got_pragma == false)
-                # Continue
-              else
-                # TODO: this is ugly. Need to figure out better way to break out of the top-level loop                            
-                done = true
-              end
-
-            end
-
-          end
+          position += position_increment
 
         # Then look for <! or </ or <?
         elsif @html[position, 2] =~ /\A\<[\!\/\?]/
@@ -156,6 +108,65 @@ module GuessHtmlEncoding
     end
 
     private
+
+
+    def charset_from_meta(string)
+
+      position = 0
+      attribute_list = {}
+      got_pragma = false
+      need_pragma = nil
+      charset = nil
+      length = string.length
+
+      while position < length
+
+        attribute, position_increment = attribute(string[position, length])
+        
+        position += position_increment.to_i
+
+        if attribute == nil
+
+          break
+
+        elsif attribute_list[attribute[:attribute_name]]
+
+          # Do nothing
+        
+        else
+
+          attribute_list[attribute[:attribute_name]] = attribute[:attribute_value]
+
+          if attribute[:attribute_name] == 'http-equiv'
+            got_pragma = true
+
+          elsif attribute[:attribute_name] == 'content'
+
+            content_charset = charset_from_meta_content(attribute[:attribute_value])
+
+            if content_charset && charset == nil
+              charset = content_charset
+              need_pragma = true
+            end
+
+          elsif attribute[:attribute_name] == 'charset'
+
+            charset = attribute[:attribute_value]
+            need_pragma = false
+
+          end
+
+        end
+
+      end
+
+      if need_pragma == nil || (need_pragma == true && got_pragma == false)
+        [nil, position]
+      else
+        [charset, position]
+      end
+      
+    end
 
     # Given a string representing the 'content' attribute value of a meta tag
     # with an `http-equiv` attribute, returns the charset specified within that
