@@ -68,12 +68,21 @@ module GuessHtmlEncoding
 
       position = 0
       charset = nil
-      
+      length = @html.length
+
       done = false
 
-      while position < @html.length && !done
+      while position < length && !done
 
-        if @html[position, 5] =~ /\<meta/i
+        # First look for a standard HTML comment (ie <!-- blah -->)
+        if @html[position, 4] == '<!--'
+
+          position += 2
+
+          position += (@html[position, length].index('-->') || length)
+
+        # Then look for the start of a meta tag
+        elsif  @html[position, 6] =~ /\A\<meta[\s\/]/i
 
           position += 5
           attribute_list = {}
@@ -85,7 +94,7 @@ module GuessHtmlEncoding
 
           while !done
 
-            attribute, p = attribute(@html[position, @html.length])
+            attribute, p = attribute(@html[position, length])
             
             position += p.to_i
 
@@ -129,10 +138,18 @@ module GuessHtmlEncoding
 
           end
 
+        # Then look for <! or </ or <?
+        elsif @html[position, 2] =~ /\A\<[\!\/\?]/
+
+          # Advance position to the first > that appears next in string, or end
+          position += @html[position, length].index('>') || length
+
         else
-          position += 1
+          # Do nothing. (This is just here to make the algorithm easier to follow)
         end
 
+        # Advance position to next character
+        position += 1
       end
 
       charset
@@ -182,7 +199,6 @@ module GuessHtmlEncoding
         
         elsif string[position] == '>'
 
-          position += 1
           attribute_name = nil
           break
 
@@ -199,6 +215,7 @@ module GuessHtmlEncoding
               break
 
             elsif string[position] =~ /[\>\/]/
+              
               break
             
             elsif string[position] =~ /[A-Z]/
@@ -233,8 +250,9 @@ module GuessHtmlEncoding
 
       attribute_value = ''
       position = 0
+      length = string.length
 
-      while position < (string.length)
+      while position < (length)
       
         # x09 (ASCII TAB), 0x0A (ASCII LF), 0x0C (ASCII FF), 0x0D (ASCII CR), or 0x20 (ASCII space) then advance position to the next byte, then, repeat this step.
         if string[position] =~ /[\u{09}\u{0A}\u{0C}\u{0D}\u{20}]/
@@ -243,7 +261,7 @@ module GuessHtmlEncoding
 
         elsif string[position] =~ /['"]/
 
-          attribute_value, position = quoted_value(string[position, string.length])
+          attribute_value, position = quoted_value(string[position, length])
           break
 
         elsif string[position] == '>'
@@ -251,7 +269,7 @@ module GuessHtmlEncoding
           break
 
         else
-          attribute_value, position = unquoted_value(string[position, string.length])
+          attribute_value, position = unquoted_value(string[position, length])
           break
         end
       end

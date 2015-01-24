@@ -68,6 +68,30 @@ describe "GuessHtmlEncoding" do
       expect(GuessHtmlEncoding.guess('<meta content="charset=UTF-8" ><meta charset="UTF-9">')).to eql('UTF-9')
     end
 
+    it 'should ignore a commented-out meta tag' do
+      expect(GuessHtmlEncoding.guess('<!DOCTYPE html><!--<meta charset="UTF-9">--><meta charset="UTF-8">')).to eql('UTF-8')
+    end    
+
+    it 'should ignore a minimal comment' do
+      expect(GuessHtmlEncoding.guess('<!DOCTYPE html><html><!--><meta charset="UTF-9"></html>')).to eql('UTF-9')
+    end 
+
+    it 'should ignore an oddly commented out meta tag using <! >' do
+      expect(GuessHtmlEncoding.guess('<!DOCTYPE html><!<meta charset="UTF-9">><meta charset="UTF-8">')).to eql('UTF-8')
+    end 
+
+    it 'should ignore an oddly commented out meta tag using </ >' do
+      expect(GuessHtmlEncoding.guess('<!DOCTYPE html></<meta charset="UTF-9">><meta charset="UTF-8">')).to eql('UTF-8')
+    end 
+
+    it 'should ignore an oddly commented out meta tag using <?  ?>' do
+      expect(GuessHtmlEncoding.guess('<!DOCTYPE html><?<meta charset="UTF-9">?><meta charset="UTF-8">')).to eql('UTF-8')
+    end 
+
+    it 'should ignore a <metadata> tag' do
+      expect(GuessHtmlEncoding.guess('<metadata test="yes" charset="UTF-9"><meta charset="UTF-8">')).to eql('UTF-8')
+    end 
+
     it "can use headers" do
       guess = GuessHtmlEncoding.guess("<html><body><div>hi!</div></body></html>",
                                       "Hello: world\nContent-Type: text/html; charset=LATIN1\nFoo: bar")
