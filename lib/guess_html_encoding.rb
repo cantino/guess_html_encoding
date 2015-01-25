@@ -224,9 +224,9 @@ module GuessHtmlEncoding
           
             if string[position] == '=' && attribute_name != ''
 
-              attribute_value, p = attribute_value(string[position + 1, length])
+              attribute_value, position_increment = attribute_value(string[position + 1, length])
 
-              position += p + 1
+              position += position_increment + 1
 
               break
 
@@ -268,7 +268,7 @@ module GuessHtmlEncoding
       position = 0
       length = string.length
 
-      while position < (length)
+      while position < length
       
         # x09 (ASCII TAB), 0x0A (ASCII LF), 0x0C (ASCII FF), 0x0D (ASCII CR), or 0x20 (ASCII space) then advance position to the next byte, then, repeat this step.
         if string[position] =~ /[\u{09}\u{0A}\u{0C}\u{0D}\u{20}]/
