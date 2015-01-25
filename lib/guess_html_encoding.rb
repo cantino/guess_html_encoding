@@ -301,13 +301,13 @@ module GuessHtmlEncoding
       attribute_value = ""
       quote_type = string[0]
       position = 1
+      length = string.length
 
-      while position < (string.length) 
+      while position < length
 
         if string[position] == quote_type
           position += 1
           break
-
         else
           attribute_value += downcase_A_to_Z_only(string[position])
           position += 1
