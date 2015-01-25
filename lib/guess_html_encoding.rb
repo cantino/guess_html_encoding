@@ -293,18 +293,6 @@ module GuessHtmlEncoding
       [attribute_value, position]
     end
 
-    # Downcases the A-Z characters only (eg not É -> é)
-    def downcase_A_to_Z_only(string)
-      string.gsub(/([A-Z])/) { |match| match.downcase }
-    end
-
-    # Given a string, at the start of which is an unquoted attribute value, returns
-    # that attribute value, and the position of the next character in the string
-    def unquoted_value(string)
-      downcased_value = downcase_A_to_Z_only(string[/\A[^\t\u{0A}\u{0C}\u{0D}\u{20}\>]*/])
-      [downcased_value, downcased_value.length]
-    end
-
     # Given a string, at the start of which is quoted attribute value, returns
     # that attribute value, and the position of the next character in the string
     # (following the second matching quote mark)
@@ -328,6 +316,18 @@ module GuessHtmlEncoding
       end
 
       [attribute_value, position]
+    end
+
+    # Given a string, at the start of which is an unquoted attribute value, returns
+    # that attribute value, and the position of the next character in the string
+    def unquoted_value(string)
+      downcased_value = downcase_A_to_Z_only(string[/\A[^\t\u{0A}\u{0C}\u{0D}\u{20}\>]*/])
+      [downcased_value, downcased_value.length]
+    end
+
+    # Downcases the A-Z characters only (eg not É -> é)
+    def downcase_A_to_Z_only(string)
+      string.gsub(/([A-Z])/) { |match| match.downcase }
     end
 
   end
