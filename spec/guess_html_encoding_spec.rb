@@ -88,6 +88,11 @@ describe "GuessHtmlEncoding" do
       expect(GuessHtmlEncoding.guess('<metadata test="yes" charset="UTF-9"><meta charset="UTF-8">')).to eql('UTF-8')
     end 
 
+    it 'should only search the first 2500 characters' do
+      html = 2500.times.collect { ' ' }.join + '<meta charset="UTF-8">'
+      expect(GuessHtmlEncoding.guess(html)).to eql(nil)
+    end 
+
     it "can use headers" do
       guess = GuessHtmlEncoding.guess("<html><body><div>hi!</div></body></html>",
                                       "Hello: world\nContent-Type: text/html; charset=LATIN1\nFoo: bar")

@@ -20,7 +20,7 @@ module GuessHtmlEncoding
 
     if out.nil? || out.empty? || !encoding_loaded?(out)
 
-      out = HTMLScanner.new(html).encoding || out
+      out = HTMLScanner.new(html[0,2500]).encoding || out
 
       out.upcase! unless out.nil?
     end
