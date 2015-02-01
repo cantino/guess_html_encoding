@@ -3,6 +3,96 @@ require 'spec_helper'
 
 describe "GuessHtmlEncoding" do
   describe "#guess" do
+  
+    it 'should use an uppercased unquoted meta tag' do
+      expect(GuessHtmlEncoding.guess('<META CHARSET=UTF-8>')).to eql('UTF-8')
+    end
+
+    it 'should use a quoted meta tag' do
+      expect(GuessHtmlEncoding.guess('<meta charset="UTF-8">')).to eql('UTF-8')
+    end
+
+    it 'should use a http-equiv meta tag' do
+      expect(GuessHtmlEncoding.guess('<meta http-equiv="content-type" content="charset=UTF-8">')).to eql('UTF-8')
+    end
+
+    it 'should use a http-equiv meta tag with semi-colons in the content value' do
+      expect(GuessHtmlEncoding.guess('<meta http-equiv="content-type" content="text/html; charset=UTF-8;">')).to eql('UTF-8')
+    end
+
+    it 'should use a http-equiv meta tag with attributes in unusual order' do
+      expect(GuessHtmlEncoding.guess('<meta content="text/html; charset=UTF-8;" http-equiv="content-type">')).to eql('UTF-8')
+    end
+
+    it 'should use a http-equiv meta tag with attributes in unusual order' do
+      expect(GuessHtmlEncoding.guess('<meta><meta charset="UTF-8">')).to eql('UTF-8')
+    end
+
+    it 'should use the first meta tag with a charset value' do
+      expect(GuessHtmlEncoding.guess('<meta charset="UTF-9"><meta charset="UTF-8">')).to eql('UTF-9')
+    end
+
+    it 'should use a meta http-equiv tag with spaces in the content value' do
+      expect(GuessHtmlEncoding.guess("<meta http-equiv='content-type' content=' text/html ; charset = UTF-8;'>")).to eql('UTF-8')
+    end
+
+    it 'should use a meta http-equiv tag with newlines in the content value' do
+      expect(GuessHtmlEncoding.guess("<meta http-equiv='content-type' content='\t\ncharset=UTF-8\n'>")).to eql('UTF-8')
+    end
+
+    it 'should use a meta http-equiv tag with double quotes in the content value' do
+      expect(GuessHtmlEncoding.guess("<meta http-equiv='content-type' content='text/html; charset=\"UTF-8\">")).to eql('UTF-8')
+    end
+
+    it 'should use a meta http-equiv tag with single quotes in the content value' do
+      expect(GuessHtmlEncoding.guess("<meta http-equiv='content-type' content=\"text/html; charset='UTF-8'\">")).to eql('UTF-8')
+    end
+
+    it 'should use the first charset attribute' do
+      expect(GuessHtmlEncoding.guess('<meta charset="UTF-9" charset="UTF-8">>')).to eql('UTF-9')
+    end
+
+    it 'should use the charset value over the content value' do
+      expect(GuessHtmlEncoding.guess('<meta http-equiv="content-type" content="charset=UTF-8" charset="UTF-9">')).to eql('UTF-9')
+    end
+
+    it 'should use the charset value if it appears before http-equiv' do
+      expect(GuessHtmlEncoding.guess('<meta content="charset=UTF-8" charset="UTF-9" http-equiv="content-type" >')).to eql('UTF-9')
+    end
+
+    it 'should ignore meta tags with content attribute but no http-equiv' do
+      expect(GuessHtmlEncoding.guess('<meta content="charset=UTF-8" ><meta charset="UTF-9">')).to eql('UTF-9')
+    end
+
+    it 'should ignore a commented-out meta tag' do
+      expect(GuessHtmlEncoding.guess('<!DOCTYPE html><!--<meta charset="UTF-9">--><meta charset="UTF-8">')).to eql('UTF-8')
+    end    
+
+    it 'should ignore a minimal comment' do
+      expect(GuessHtmlEncoding.guess('<!DOCTYPE html><html><!--><meta charset="UTF-9"></html>')).to eql('UTF-9')
+    end 
+
+    it 'should ignore an oddly commented out meta tag using <! >' do
+      expect(GuessHtmlEncoding.guess('<!DOCTYPE html><!<meta charset="UTF-9">><meta charset="UTF-8">')).to eql('UTF-8')
+    end 
+
+    it 'should ignore an oddly commented out meta tag using </ >' do
+      expect(GuessHtmlEncoding.guess('<!DOCTYPE html></<meta charset="UTF-9">><meta charset="UTF-8">')).to eql('UTF-8')
+    end 
+
+    it 'should ignore an oddly commented out meta tag using <?  ?>' do
+      expect(GuessHtmlEncoding.guess('<!DOCTYPE html><?<meta charset="UTF-9">?><meta charset="UTF-8">')).to eql('UTF-8')
+    end 
+
+    it 'should ignore a <metadata> tag' do
+      expect(GuessHtmlEncoding.guess('<metadata test="yes" charset="UTF-9"><meta charset="UTF-8">')).to eql('UTF-8')
+    end 
+
+    it 'should only search the first 2500 characters' do
+      html = 2500.times.collect { ' ' }.join + '<meta charset="UTF-8">'
+      expect(GuessHtmlEncoding.guess(html)).to eql(nil)
+    end 
+
     it "can use headers" do
       guess = GuessHtmlEncoding.guess("<html><body><div>hi!</div></body></html>",
                                       "Hello: world\nContent-Type: text/html; charset=LATIN1\nFoo: bar")
