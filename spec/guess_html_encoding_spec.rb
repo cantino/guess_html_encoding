@@ -146,7 +146,22 @@ describe "GuessHtmlEncoding" do
       guess = GuessHtmlEncoding.guess('<html><head><meta http-equiv="content-type" content="text/html; charset=GB2312;"></head><body><div>hi!</div></body></html>')
       expect(guess).to eq("GB18030")
     end
-    
+
+    it "translates Shift_JIS to WINDOWS-31J" do
+      guess = GuessHtmlEncoding.guess('<html><head><meta http-equiv="content-type" content="text/html; charset=shift_jis;"></head><body><div>hi!</div></body></html>')
+      expect(guess).to eq("WINDOWS-31J")
+    end
+
+    it "translates SHIFT-JIS to WINDOWS-31J" do
+      guess = GuessHtmlEncoding.guess('<html><head><meta http-equiv="content-type" content="text/html; charset=shift-jis;"></head><body><div>hi!</div></body></html>')
+      expect(guess).to eq("WINDOWS-31J")
+    end
+
+    it "translates SJIS to WINDOWS-31J" do
+      guess = GuessHtmlEncoding.guess('<html><head><meta http-equiv="content-type" content="text/html; charset=sjis;"></head><body><div>hi!</div></body></html>')
+      expect(guess).to eq("WINDOWS-31J")
+    end
+
     it "should not raise an exception if data is nil" do
       expect { GuessHtmlEncoding.guess(nil) }.not_to raise_error
     end
