@@ -167,8 +167,8 @@ describe "GuessHtmlEncoding" do
     end
 
     it "should work on incorrectly encoded pages" do
-      data = "<html><head><meta http-equiv='content-type' content='text/html; charset=utf8;'></head><body><div>hi!\xc2</div></body></html>"
-      replaced = "<html><head><meta http-equiv='content-type' content='text/html; charset=utf8;'></head><body><div>hi!\uFFFD</div></body></html>"
+      data = "<html><head><meta http-equiv='content-type' content='text/html; charset=utf8;'></head><body><div>hi!\xc2♥</div></body></html>"
+      replaced = "<html><head><meta http-equiv='content-type' content='text/html; charset=utf8;'></head><body><div>hi!\uFFFD♥</div></body></html>"
 
       data.force_encoding("ASCII-8BIT")
       expect(data).to be_valid_encoding # everything is valid in binary
