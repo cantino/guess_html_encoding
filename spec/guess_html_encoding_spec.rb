@@ -146,7 +146,22 @@ describe "GuessHtmlEncoding" do
       guess = GuessHtmlEncoding.guess('<html><head><meta http-equiv="content-type" content="text/html; charset=GB2312;"></head><body><div>hi!</div></body></html>')
       expect(guess).to eq("GB18030")
     end
-    
+
+    it "translates Shift_JIS to WINDOWS-31J" do
+      guess = GuessHtmlEncoding.guess('<html><head><meta http-equiv="content-type" content="text/html; charset=shift_jis;"></head><body><div>hi!</div></body></html>')
+      expect(guess).to eq("WINDOWS-31J")
+    end
+
+    it "translates SHIFT-JIS to WINDOWS-31J" do
+      guess = GuessHtmlEncoding.guess('<html><head><meta http-equiv="content-type" content="text/html; charset=shift-jis;"></head><body><div>hi!</div></body></html>')
+      expect(guess).to eq("WINDOWS-31J")
+    end
+
+    it "translates SJIS to WINDOWS-31J" do
+      guess = GuessHtmlEncoding.guess('<html><head><meta http-equiv="content-type" content="text/html; charset=sjis;"></head><body><div>hi!</div></body></html>')
+      expect(guess).to eq("WINDOWS-31J")
+    end
+
     it "should not raise an exception if data is nil" do
       expect { GuessHtmlEncoding.guess(nil) }.not_to raise_error
     end
@@ -207,10 +222,29 @@ describe "GuessHtmlEncoding" do
       expect(GuessHtmlEncoding.guess(data)).to eq("GB18030")
       expect(GuessHtmlEncoding.encode(data).encoding.to_s).to eq("GB18030")
     end
-    
+
     it "should work with headers as a hash" do
       data = File.read(File.join(File.dirname(__FILE__), "fixtures/gb18030.html"), :encoding => "binary")
       expect(lambda { GuessHtmlEncoding.encode(data, {}) }).not_to raise_error
+    end
+
+    it "should work on Windows-31J (and translate Shift_JIS into Windows-31J)" do
+      data = File.read(File.join(File.dirname(__FILE__), "fixtures/windows-31j.html"), :encoding => "binary")
+
+      # Shift_JIS don't includes Windows-31J special chars
+      expect(GuessHtmlEncoding.encode(data).encode("UTF-8")).to include("√", "№", "髙")
+      expect(GuessHtmlEncoding.encoding_loaded?("Windows-31J")).to be_truthy
+      expect(GuessHtmlEncoding.guess(data)).to eq("WINDOWS-31J")
+      expect(GuessHtmlEncoding.encode(data).encoding.to_s).to eq("Windows-31J")
+    end
+
+    it "should work on Shift_JIS (and translate Shift_JIS into Windows-31J)" do
+      data = File.read(File.join(File.dirname(__FILE__), "fixtures/shift_jis.html"), :encoding => "binary")
+
+      expect(GuessHtmlEncoding.guess(data)).to eq("WINDOWS-31J")
+      expect(GuessHtmlEncoding.encode(data).encoding.to_s).to eq("Windows-31J")
+      # Windows-31J includes Shift_JIS chars
+      expect(GuessHtmlEncoding.encode(data).encode("UTF-8")).to eq(GuessHtmlEncoding.encode(data).encode("UTF-8", "Shift_JIS"))
     end
   end
 

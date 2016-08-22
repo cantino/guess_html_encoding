@@ -32,6 +32,7 @@ module GuessHtmlEncoding
       out = "ISO-8859-1" if %w[LATIN1 LATIN-1].include?(out)
       out = "WINDOWS-1250" if %w[WIN-1251 WIN1251].include?(out)
       out = "GB18030" if %w[GB2312 GB18030].include?(out) 
+      out = "WINDOWS-31J" if %w[SHIFT_JIS SHIFT-JIS SJIS].include?(out)
     end
 
     out
